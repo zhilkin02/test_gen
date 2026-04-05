@@ -1,5 +1,4 @@
-# Firebase Studio
-
-This is a NextJS starter in Firebase Studio.
-
-To get started, take a look at src/app/page.tsx.
+# TestGen
+Это стартовый проект NextJS.
+Приложение для автоматической генерации тестовых вопросов.
+Для начала взгляните на файл src/app/page.tsx.
