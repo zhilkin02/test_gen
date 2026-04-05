@@ -123,7 +123,15 @@ function createGenerateQuestionsPrompt(aiInstance: ReturnType<typeof getAiForMod
     prompt: `You are an expert educator creating practice test questions for students.
 Based on the following lecture content, generate {{numberOfQuestions}} test questions of {{questionDifficulty}} difficulty.
 The questions should be of type: {{questionType}}.
-**Important**: Ensure that the questions, options, and answers are generated in the same language as the provided 'Lecture Content'.
+
+**Difficulty Guidelines**:
+- **Easy**: Questions should test basic recall of facts directly stated in the lecture content. Distractors (incorrect options) can be clearly wrong.
+- **Medium**: Questions should require comprehension and application of the material. Distractors should be plausible, related to the topic, and represent common misunderstandings.
+- **Hard**: Questions should demand synthesis, analysis, or evaluation. They might require applying knowledge to new scenarios or making fine distinctions. Distractors must be very subtle and highly relevant, designed to tempt someone who only has a superficial understanding. They should represent common errors or be statements that are almost correct.
+
+**General Instructions**:
+- For question types with options (like single-choice, multiple-choice), all incorrect options (distractors) must be plausible and directly related to the subject of the question. Avoid distractors that are obviously incorrect or from completely different topics. This is especially important for 'medium' and 'hard' difficulties.
+- **Important**: Ensure that the questions, options, and answers are generated in the same language as the provided 'Lecture Content'.
 
 **ЕСЛИ КОНТЕНТ НА РУССКОМ ЯЗЫКЕ, ВЕСЬ ВЫВОД (вопросы, варианты, ответы) В JSON ДОЛЖЕН БЫТЬ СТРОГО НА РУССКОМ ЯЗЫКЕ.**
 **IF THE CONTENT IS IN RUSSIAN, ALL OUTPUT (questions, options, answers) IN THE JSON MUST BE STRICTLY IN RUSSIAN.**
