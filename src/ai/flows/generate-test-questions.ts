@@ -214,28 +214,28 @@ Here are examples for each question type:
 }
 
 export async function generateTestQuestions(input: GenerateTestQuestionsInput): Promise<GenerateTestQuestionsResult> {
-  console.error('AI THOUGHT: Starting question generation process with input:', JSON.stringify(input, null, 2));
+  console.log('AI THOUGHT: Starting question generation process with input:', JSON.stringify(input, null, 2));
 
   const preferredModel = input.preferredModel ?? 'gemini-2.5-flash-lite';
   const modelsToTry = getModelsToTry(preferredModel);
   let lastError: unknown;
 
-  console.error(`AI THOUGHT: Model priority list: ${modelsToTry.join(', ')}`);
+  console.log(`AI THOUGHT: Model priority list: ${modelsToTry.join(', ')}`);
 
   for (const modelId of modelsToTry) {
-    console.error(`AI THOUGHT: Attempting to generate questions with model: ${modelId}`);
+    console.log(`AI THOUGHT: Attempting to generate questions with model: ${modelId}`);
     try {
       const aiInstance = getAiForModel(modelId);
       const prompt = createGenerateQuestionsPrompt(aiInstance, input.questionType);
 
-      console.error(`AI THOUGHT: Calling model '${modelId}' with the generated prompt.`);
+      console.log(`AI THOUGHT: Calling model '${modelId}' with the generated prompt.`);
       const { output } = await prompt(input);
       
       if (!output) {
         throw new Error("Model returned empty output.");
       }
 
-      console.error(`AI THOUGHT: Successfully generated questions with model: ${modelId}. Output:`, JSON.stringify(output, null, 2));
+      console.log(`AI THOUGHT: Successfully generated questions with model: ${modelId}. Output:`, JSON.stringify(output, null, 2));
 
       const result = {
         ...output,
@@ -243,7 +243,7 @@ export async function generateTestQuestions(input: GenerateTestQuestionsInput): 
         fallbackUsed: modelId !== preferredModel,
       };
 
-      console.error('AI THOUGHT: Final result object:', JSON.stringify(result, null, 2));
+      console.log('AI THOUGHT: Final result object:', JSON.stringify(result, null, 2));
       return result;
 
     } catch (e) {
