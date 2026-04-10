@@ -214,29 +214,52 @@ Here are examples for each question type:
 }
 
 export async function generateTestQuestions(input: GenerateTestQuestionsInput): Promise<GenerateTestQuestionsResult> {
+  console.log('AI THOUGHT: Starting question generation process with input:', JSON.stringify(input, null, 2));
+
   const preferredModel = input.preferredModel ?? 'gemini-2.5-flash-lite';
   const modelsToTry = getModelsToTry(preferredModel);
   let lastError: unknown;
 
+  console.log(`AI THOUGHT: Model priority list: ${modelsToTry.join(', ')}`);
+
   for (const modelId of modelsToTry) {
+    console.log(`AI THOUGHT: Attempting to generate questions with model: ${modelId}`);
     try {
       const aiInstance = getAiForModel(modelId);
       const prompt = createGenerateQuestionsPrompt(aiInstance, input.questionType);
+
+      console.log(`AI THOUGHT: Calling model '${modelId}' with the generated prompt.`);
       const { output } = await prompt(input);
-      return {
-        ...output!,
+      
+      if (!output) {
+        throw new Error("Model returned empty output.");
+      }
+
+      console.log(`AI THOUGHT: Successfully generated questions with model: ${modelId}. Output:`, JSON.stringify(output, null, 2));
+
+      const result = {
+        ...output,
         usedModel: modelId,
         fallbackUsed: modelId !== preferredModel,
       };
+
+      console.log('AI THOUGHT: Final result object:', JSON.stringify(result, null, 2));
+      return result;
+
     } catch (e) {
       lastError = e;
-      if (!isRetryableError(e)) {
-         console.error(`Non-retryable error generating questions of type '${input.questionType}' with model '${modelId}':`, e);
+      const errorMessage = e instanceof Error ? e.message : String(e);
+
+      if (isRetryableError(e)) {
+         console.warn(`AI THOUGHT: A retryable error occurred with model '${modelId}'. I will try the next available model. Error:`, errorMessage);
+      } else {
+         console.error(`AI THOUGHT: A non-retryable error occurred with model '${modelId}'. I cannot proceed with this model. Error:`, e);
+         // Stop trying other models if it's not a capacity issue
          throw e;
       }
-       console.warn(`Retryable error with model ${modelId}. Trying next model. Error:`, e);
     }
   }
 
+  console.error('AI THOUGHT: All models failed to generate questions. The last error was:', lastError);
   throw lastError;
 }
