@@ -52,6 +52,9 @@ const MatchingOutputSchema = BaseQuestionOutputSchema.extend({
   prompts: z.array(z.string()).min(2).max(8).describe("An array of 2 to 8 items to be matched."),
   options: z.array(z.string()).min(2).max(8).describe("An array of 2 to 8 unique options to match from."),
   correctMatches: z.array(MatchingPairSchema).describe("An array of objects, where each object represents a correct pair of a prompt and an option."),
+}).refine(data => data.prompts.length === data.options.length, {
+    message: "The number of prompts must be equal to the number of options.",
+    path: ["prompts", "options"],
 });
 
 const GeneratedQuestionSchema = z.discriminatedUnion("type", [
@@ -222,25 +225,27 @@ Here are examples for each question type:
    }
 
 4. If questionType is 'matching':
-   Provide 2 to 8 unique prompts and 2 to 8 unique options.
-   The "correctMatches" should be an array of objects, each with a "prompt" and its corresponding "option".
-   The "type" field must be "matching".
-   Example:
-   {
-     "questions": [
-       {
-         "type": "matching",
-         "questionText": "Сопоставьте страны с их столицами.",
-         "prompts": ["Франция", "Германия", "Испания"],
-         "options": ["Берлин", "Мадрид", "Париж"],
-         "correctMatches": [
-           { "prompt": "Франция", "option": "Париж" },
-           { "prompt": "Германия", "option": "Берлин" },
-           { "prompt": "Испания", "option": "Мадрид" }
-         ]
-       }
-     ]
-   }
+    **Crucial**: The number of prompts MUST equal the number of options. Do not create extra/distractor options.
+    Provide 2 to 8 unique prompts and an equal number of unique options.
+    The user's task is to match each prompt to its single correct option.
+    The "correctMatches" array must contain a pair for every prompt.
+    The "type" field must be "matching".
+    Example:
+    {
+        "questions": [
+            {
+                "type": "matching",
+                "questionText": "Сопоставьте страны с их столицами.",
+                "prompts": ["Франция", "Германия", "Испания"],
+                "options": ["Берлин", "Мадрид", "Париж"],
+                "correctMatches": [
+                    { "prompt": "Франция", "option": "Париж" },
+                    { "prompt": "Германия", "option": "Берлин" },
+                    { "prompt": "Испания", "option": "Мадрид" }
+                ]
+            }
+        ]
+    }
 
   `,
   });
