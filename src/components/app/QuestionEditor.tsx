@@ -171,25 +171,24 @@ export default function QuestionEditor({
     const question = questions.find(q => q.id === questionId);
      if (!question) return;
 
-    if (question.type === 'matching') {
-        if (question.editedPrompts.length >= 8) {
-            toast({ title: "Максимум элементов", description: "Можно добавить не более 8 пар для сопоставления.", variant: "default"});
-            return;
+    const limit = (question.type === 'matching') ? 8 : 5;
+    const currentCount = (question.type === 'matching') ? (isPrompt ? question.editedPrompts.length : question.editedOptions.length) : question.editedOptions.length;
+
+    if (currentCount >= limit) {
+        toast({ title: `Максимум ${isPrompt ? 'элементов' : 'вариантов'}`, description: `Можно добавить не более ${limit} ${isPrompt ? 'элементов' : 'вариантов'}.`, variant: "default"});
+        return;
+    }
+
+    if (question.type === 'single-choice' || question.type === 'multiple-choice' || question.type === 'matching') {
+        const newText = isPrompt ? `Новый элемент ${currentCount + 1}` : `Новый вариант ${currentCount + 1}`;
+        const newItem: EditableOption = { id: uuidv4(), text: newText };
+        
+        if (question.type === 'matching') {
+            if (isPrompt) onQuestionUpdate({ ...question, editedPrompts: [...question.editedPrompts, newItem] });
+            else onQuestionUpdate({ ...question, editedOptions: [...question.editedOptions, newItem] });
+        } else {
+             onQuestionUpdate({ ...question, editedOptions: [...question.editedOptions, newItem] });
         }
-        const newPrompt: EditableOption = { id: uuidv4(), text: `Новый элемент ${question.editedPrompts.length + 1}` };
-        const newOption: EditableOption = { id: uuidv4(), text: `Новый вариант ${question.editedOptions.length + 1}` };
-        onQuestionUpdate({ 
-            ...question, 
-            editedPrompts: [...question.editedPrompts, newPrompt], 
-            editedOptions: [...question.editedOptions, newOption] 
-        });
-    } else if (question.type === 'single-choice' || question.type === 'multiple-choice') {
-        if (question.editedOptions.length >= 5) {
-            toast({ title: `Максимум вариантов`, description: `Можно добавить не более 5 вариантов.`, variant: "default"});
-            return;
-        }
-        const newOption: EditableOption = { id: uuidv4(), text: `Новый вариант ${question.editedOptions.length + 1}` };
-        onQuestionUpdate({ ...question, editedOptions: [...question.editedOptions, newOption] });
     }
   };
 
@@ -199,50 +198,43 @@ export default function QuestionEditor({
 
      const minItems = 2;
      if (question.type === 'single-choice' || question.type === 'multiple-choice') {
-        if (question.editedOptions.length <= minItems) {
+        if (question.editedOptions.length > minItems) {
+            const optionToRemove = question.editedOptions.find(opt => opt.id === itemId);
+            const updatedOptions = question.editedOptions.filter(opt => opt.id !== itemId);
+            let updatedQuestion: EditableSingleChoiceQuestion | EditableMultipleChoiceQuestion = { ...question, editedOptions: updatedOptions };
+
+            if (updatedQuestion.type === 'single-choice' && updatedQuestion.editedCorrectAnswer === optionToRemove?.text) {
+              updatedQuestion.editedCorrectAnswer = updatedOptions.length > 0 ? updatedOptions[0].text : "";
+            } else if (updatedQuestion.type === 'multiple-choice' && updatedQuestion.editedCorrectAnswers.includes(optionToRemove?.text || '')) {
+               updatedQuestion.editedCorrectAnswers = updatedQuestion.editedCorrectAnswers.filter(ans => ans !== optionToRemove?.text);
+            }
+            onQuestionUpdate(updatedQuestion);
+        } else {
              toast({ title: "Минимум вариантов", description: `Должно быть не менее ${minItems} вариантов ответа.`, variant: "default"});
-             return;
         }
-        const optionToRemove = question.editedOptions.find(opt => opt.id === itemId);
-        const updatedOptions = question.editedOptions.filter(opt => opt.id !== itemId);
-        let updatedQuestion: EditableSingleChoiceQuestion | EditableMultipleChoiceQuestion = { ...question, editedOptions: updatedOptions };
-
-        if (updatedQuestion.type === 'single-choice' && updatedQuestion.editedCorrectAnswer === optionToRemove?.text) {
-            updatedQuestion.editedCorrectAnswer = updatedOptions.length > 0 ? updatedOptions[0].text : "";
-        } else if (updatedQuestion.type === 'multiple-choice' && updatedQuestion.editedCorrectAnswers.includes(optionToRemove?.text || '')) {
-            updatedQuestion.editedCorrectAnswers = updatedQuestion.editedCorrectAnswers.filter(ans => ans !== optionToRemove?.text);
-        }
-        onQuestionUpdate(updatedQuestion);
-
     } else if (question.type === 'matching') {
-        if (question.editedPrompts.length <= minItems) {
-            toast({ title: "Минимум элементов", description: `Должно быть не менее ${minItems} пар для сопоставления.`, variant: "default"});
+        const targetArray = isPrompt ? question.editedPrompts : question.editedOptions;
+        if (targetArray.length <= minItems) {
+            toast({ title: "Минимум элементов", description: `Должно быть не менее ${minItems} ${isPrompt ? 'элементов' : 'вариантов'}.`, variant: "default"});
             return;
         }
-
-        const itemIndex = isPrompt 
-            ? question.editedPrompts.findIndex(p => p.id === itemId) 
-            : question.editedOptions.findIndex(o => o.id === itemId);
-
-        if (itemIndex === -1) return;
-
-        const promptToRemove = question.editedPrompts[itemIndex];
-        const optionToRemove = question.editedOptions[itemIndex];
-        
-        const updatedPrompts = question.editedPrompts.filter((_, index) => index !== itemIndex);
-        const updatedOptions = question.editedOptions.filter((_, index) => index !== itemIndex);
+        const itemToRemove = targetArray.find(item => item.id === itemId);
+        const updatedArray = targetArray.filter(item => item.id !== itemId);
         const updatedMatches = { ...question.editedCorrectMatches };
-
-        if (promptToRemove && promptToRemove.text in updatedMatches) {
-            delete updatedMatches[promptToRemove.text];
+        
+        if (isPrompt) {
+            if (itemToRemove && itemToRemove.text in updatedMatches) delete updatedMatches[itemToRemove.text];
+            onQuestionUpdate({ ...question, editedPrompts: updatedArray, editedCorrectMatches: updatedMatches });
+        } else {
+            if (itemToRemove) {
+                 for (const key in updatedMatches) {
+                    if (updatedMatches[key] === itemToRemove.text) {
+                        delete updatedMatches[key];
+                    }
+                }
+            }
+            onQuestionUpdate({ ...question, editedOptions: updatedArray, editedCorrectMatches: updatedMatches });
         }
-
-        onQuestionUpdate({ 
-            ...question, 
-            editedPrompts: updatedPrompts, 
-            editedOptions: updatedOptions, 
-            editedCorrectMatches: updatedMatches 
-        });
     }
   };
 
@@ -432,23 +424,34 @@ export default function QuestionEditor({
       case 'matching':
         return (
             <div className="space-y-4">
-                <div className="grid grid-cols-1 gap-y-3">
+                <div className="grid grid-cols-2 gap-x-8 gap-y-3">
                     <div>
-                        <Label className="text-sm text-muted-foreground">Пары для сопоставления</Label>
+                        <Label className="text-sm text-muted-foreground">Элементы</Label>
                         <div className="space-y-2 mt-2">
                             {q.editedPrompts.map((prompt, index) => (
-                                <div key={prompt.id} className="flex items-center space-x-2 gap-2">
+                                <div key={prompt.id} className="flex items-center space-x-2">
                                     <Input value={prompt.text} onChange={(e) => handleOptionTextChange(q.id, prompt.id, e.target.value, true)} className="flex-grow text-base p-2" placeholder={`Элемент ${index + 1}`} />
-                                    <Input value={q.editedOptions[index]?.text || ''} onChange={(e) => handleOptionTextChange(q.id, q.editedOptions[index].id, e.target.value, false)} className="flex-grow text-base p-2" placeholder={`Вариант ${index + 1}`} />
                                     <Button variant="ghost" size="icon" onClick={() => removeOptionOrPrompt(q.id, prompt.id, true)} className="text-destructive hover:bg-destructive/10" disabled={q.editedPrompts.length <= 2}><MinusCircle className="h-4 w-4" /></Button>
                                 </div>
                             ))}
-                             <Button variant="outline" size="sm" onClick={() => addOptionOrPrompt(q.id, true)} disabled={q.editedPrompts.length >= 8}><PlusCircle className="mr-2 h-4 w-4" /> Добавить пару</Button>
+                             <Button variant="outline" size="sm" onClick={() => addOptionOrPrompt(q.id, true)} disabled={q.editedPrompts.length >= 8}><PlusCircle className="mr-2 h-4 w-4" /> Добавить элемент</Button>
+                        </div>
+                    </div>
+                    <div>
+                        <Label className="text-sm text-muted-foreground">Варианты</Label>
+                        <div className="space-y-2 mt-2">
+                             {q.editedOptions.map((option, index) => (
+                                <div key={option.id} className="flex items-center space-x-2">
+                                    <Input value={option.text} onChange={(e) => handleOptionTextChange(q.id, option.id, e.target.value, false)} className="flex-grow text-base p-2" placeholder={`Вариант ${index + 1}`} />
+                                    <Button variant="ghost" size="icon" onClick={() => removeOptionOrPrompt(q.id, option.id, false)} className="text-destructive hover:bg-destructive/10" disabled={q.editedOptions.length <= 2}><MinusCircle className="h-4 w-4" /></Button>
+                                </div>
+                            ))}
+                            <Button variant="outline" size="sm" onClick={() => addOptionOrPrompt(q.id, false)} disabled={q.editedOptions.length >= 8}><PlusCircle className="mr-2 h-4 w-4" /> Добавить вариант</Button>
                         </div>
                     </div>
                 </div>
-                 <div>
-                     <Label className="text-sm text-muted-foreground mt-4">Правильные сопоставления (для проверки)</Label>
+                <div>
+                     <Label className="text-sm text-muted-foreground">Правильные сопоставления</Label>
                      <div className="space-y-2 mt-2 border p-3 rounded-md bg-muted/20">
                         {q.editedPrompts.map(prompt => (
                             <div key={prompt.id} className="flex items-center space-x-3">
