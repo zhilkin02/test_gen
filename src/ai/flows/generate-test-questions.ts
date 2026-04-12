@@ -203,9 +203,11 @@ Here are examples for each question type:
    }
 
 3. If questionType is 'multiple-choice':
-   Provide 3 to 5 unique options. 
-   "correctAnswers" must be an array containing **AT LEAST TWO** correct options.
+   **Crucial**: This question type MUST have multiple correct answers.
+   Provide 3 to 5 unique options.
+   The "correctAnswers" array must contain **AT LEAST TWO** strings that are exact matches for items in the "options" array.
    The "type" field must be "multiple-choice".
+   A question is only a valid multiple-choice question if it has several correct answers.
    Example:
    {
      "questions": [
