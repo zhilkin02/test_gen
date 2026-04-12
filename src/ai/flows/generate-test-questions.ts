@@ -124,13 +124,43 @@ function createGenerateQuestionsPrompt(aiInstance: ReturnType<typeof getAiForMod
 Based on the following lecture content, generate {{numberOfQuestions}} test questions of {{questionDifficulty}} difficulty.
 The questions should be of type: {{questionType}}.
 
+**1. DIFFICULTY LEVEL (60/40 ratio):**
+   • 60% of questions — Analyze, Evaluate, Create levels (Bloom's Taxonomy):
+     - Comparison of concepts/approaches/architectures ("What is the advantage of A over B under condition X?")
+     - Cause and effect relationships ("Why will the absence of X lead to consequence Y?")
+     - "What if..." scenarios ("What will happen if parameter Z is changed?")
+     - Analysis of limitations ("In which case is method A not applicable and why?")
+   
+   • 40% of questions — Remember, Understand levels:
+     - Key definitions, terms, basic concepts from the material.
+     - ❗ No mechanical memorization of dates, names, abbreviations (unless they are central to understanding the topic).
+
+**2. DISTRACTORS (incorrect options):**
+   • All 4 options must be:
+     - Semantically close to the correct answer.
+     - Plausible for a student with a superficial knowledge of the topic.
+     - Reflect typical misconceptions or partial understanding.
+   • ❌ Forbidden absurd/obviously incorrect options:
+     - Names of famous people unrelated to the topic.
+     - Terms from other subject areas.
+     - Options that contradict the basic logic of the topic.
+
+**3. STRICTLY BASED ON THE SOURCE MATERIAL:**
+   • Use only terms, examples, and concepts explicitly mentioned in the provided text.
+   • If a topic is not covered in the material — do not generate questions about it.
+   • Do not add external knowledge, even if it is generally accepted.
+
+**4. ANTI-PATTERNS (forbidden formats):**
+   ❌ "Who created/proposed/developed [X]?"
+   ❌ "In what year did [X] appear?"
+
 **Difficulty Guidelines**:
 - **Easy**: Questions should test basic recall of facts directly stated in the lecture content. Distractors (incorrect options) can be clearly wrong.
 - **Medium**: Questions should require comprehension and application of the material. Distractors should be plausible, related to the topic, and represent common misunderstandings.
 - **Hard**: Questions should demand synthesis, analysis, or evaluation. They might require applying knowledge to new scenarios or making fine distinctions. Distractors must be very subtle and highly relevant, designed to tempt someone who only has a superficial understanding. They should represent common errors or be statements that are almost correct.
 
 **General Instructions**:
-- For question types with options (like single-choice, multiple-choice), all incorrect options (distractors) must be plausible and directly related to the subject of the question. Avoid distractors that are obviously incorrect or from completely different topics. This is especially important for 'medium' and 'hard' difficulties.
+- For question types with options (like single-choice, multiple-choice), all incorrect options (distractors) must be plausible and directly related to the subject of the question. Avoid distractors that are obviously incorrect or from completely different topics. 
 - **Important**: Ensure that the questions, options, and answers are generated in the same language as the provided 'Lecture Content'.
 
 **ЕСЛИ КОНТЕНТ НА РУССКОМ ЯЗЫКЕ, ВЕСЬ ВЫВОД (вопросы, варианты, ответы) В JSON ДОЛЖЕН БЫТЬ СТРОГО НА РУССКОМ ЯЗЫКЕ.**
