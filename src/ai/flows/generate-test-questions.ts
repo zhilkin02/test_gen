@@ -52,9 +52,6 @@ const MatchingOutputSchema = BaseQuestionOutputSchema.extend({
   prompts: z.array(z.string()).min(2).max(8).describe("An array of 2 to 8 items to be matched."),
   options: z.array(z.string()).min(2).max(8).describe("An array of 2 to 8 unique options to match from."),
   correctMatches: z.array(MatchingPairSchema).describe("An array of objects, where each object represents a correct pair of a prompt and an option."),
-}).refine(data => data.prompts.length === data.options.length, {
-    message: "The number of prompts must be equal to the number of options.",
-    path: ["prompts", "options"],
 });
 
 const GeneratedQuestionSchema = z.discriminatedUnion("type", [
