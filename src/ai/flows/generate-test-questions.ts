@@ -27,7 +27,7 @@ const BaseQuestionOutputSchema = z.object({
 
 const FillInTheBlankOutputSchema = BaseQuestionOutputSchema.extend({
   type: z.enum(['fill-in-the-blank']).describe("The type of the question."),
-  correctAnswer: z.string().describe("The word or phrase that correctly fills the blank."),
+  correctAnswers: z.array(z.string()).min(1).describe("An array of acceptable answers. Provide variations in spelling, format, or wording. The first answer should be the most ideal one."),
 });
 
 const SingleChoiceOutputSchema = BaseQuestionOutputSchema.extend({
@@ -176,13 +176,14 @@ Here are examples for each question type:
 1. If questionType is 'fill-in-the-blank':
    The "questionText" should include "___" to denote the blank.
    The "type" field must be "fill-in-the-blank".
+   The "correctAnswers" field must be an array of strings with at least one answer. Include common variations.
    Example:
    {
      "questions": [
        {
          "type": "fill-in-the-blank",
-         "questionText": "The capital of France is ___, known for the Eiffel Tower.",
-         "correctAnswer": "Paris"
+         "questionText": "The Second World War is often abbreviated as ___.",
+         "correctAnswers": ["WWII", "WW2", "World War 2"]
        }
      ]
    }

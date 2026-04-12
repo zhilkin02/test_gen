@@ -66,9 +66,32 @@ export default function QuestionEditor({
     }
   };
   
-  const handleFillInTheBlankAnswerChange = (id: string, answer: string) => {
-    const question = questions.find(q => q.id === id) as EditableFillInTheBlankQuestion;
-    if (question) onQuestionUpdate({ ...question, editedCorrectAnswer: answer });
+  const handleFillInTheBlankAnswerChange = (questionId: string, answerIndex: number, newAnswer: string) => {
+    const question = questions.find(q => q.id === questionId) as EditableFillInTheBlankQuestion;
+    if (question) {
+      const updatedAnswers = [...question.editedCorrectAnswers];
+      updatedAnswers[answerIndex] = newAnswer;
+      onQuestionUpdate({ ...question, editedCorrectAnswers: updatedAnswers });
+    }
+  };
+
+  const addFillInTheBlankAnswer = (questionId: string) => {
+    const question = questions.find(q => q.id === questionId) as EditableFillInTheBlankQuestion;
+    if (question && question.editedCorrectAnswers.length < 5) { // Limit to 5 variants
+      onQuestionUpdate({ ...question, editedCorrectAnswers: [...question.editedCorrectAnswers, ''] });
+    } else {
+        toast({ title: "Достигнут лимит", description: "Можно добавить не более 5 вариантов ответа.", variant: "default" });
+    }
+  };
+
+  const removeFillInTheBlankAnswer = (questionId: string, answerIndex: number) => {
+    const question = questions.find(q => q.id === questionId) as EditableFillInTheBlankQuestion;
+    if (question && question.editedCorrectAnswers.length > 1) {
+      const updatedAnswers = question.editedCorrectAnswers.filter((_, index) => index !== answerIndex);
+      onQuestionUpdate({ ...question, editedCorrectAnswers: updatedAnswers });
+    } else {
+        toast({ title: "Минимум один ответ", description: "Должен быть хотя бы один вариант ответа.", variant: "default" });
+    }
   };
 
   const handleOptionTextChange = (questionId: string, optionId: string, newText: string, isPrompt: boolean = false) => {
@@ -222,7 +245,7 @@ export default function QuestionEditor({
         const { type, editedQuestionText } = q;
         switch (q.type) {
           case 'fill-in-the-blank':
-            return { type, questionText: editedQuestionText, correctAnswer: q.editedCorrectAnswer };
+            return { type, questionText: editedQuestionText, correctAnswers: q.editedCorrectAnswers.filter(a => a.trim() !== '') };
           case 'single-choice':
             return { type, questionText: editedQuestionText, options: q.editedOptions.map(opt => opt.text), correctAnswer: q.editedCorrectAnswer };
           case 'multiple-choice':
@@ -279,8 +302,8 @@ export default function QuestionEditor({
 
       switch (q.type) {
         case 'fill-in-the-blank':
-          // Assuming the blank is '___' and should be replaced by the answer.
-          const filledText = questionText.replace('___', `{=${escapeGiftChars(q.correctAnswer)}}`);
+          const answersGift = q.correctAnswers.map(ans => `=${escapeGiftChars(ans)}`).join(' ');
+          const filledText = questionText.replace('___', `{${answersGift}}`);
           return `${title}${filledText}`;
         
         case 'single-choice':
@@ -364,8 +387,19 @@ export default function QuestionEditor({
       case 'fill-in-the-blank':
         return (
           <div className="space-y-2">
-            <Label htmlFor={`answer-${q.id}`} className="text-sm text-muted-foreground">Правильный ответ (заполняет "___"):</Label>
-            <Input id={`answer-${q.id}`} value={q.editedCorrectAnswer} onChange={(e) => handleFillInTheBlankAnswerChange(q.id, e.target.value)} className="text-base p-2" placeholder="Ответ для пропуска" />
+            <Label className="text-sm text-muted-foreground">Варианты правильных ответов (заполняет "___"):</Label>
+             {q.editedCorrectAnswers.map((answer, index) => (
+              <div key={index} className="flex items-center space-x-2">
+                <Input 
+                  value={answer}
+                  onChange={(e) => handleFillInTheBlankAnswerChange(q.id, index, e.target.value)}
+                  className="text-base p-2 flex-grow"
+                  placeholder={`Вариант ответа ${index + 1}`}
+                />
+                 <Button variant="ghost" size="icon" onClick={() => removeFillInTheBlankAnswer(q.id, index)} className="text-destructive hover:bg-destructive/10" disabled={q.editedCorrectAnswers.length <= 1}><MinusCircle className="h-4 w-4" /></Button>
+              </div>
+            ))}
+             <Button variant="outline" size="sm" onClick={() => addFillInTheBlankAnswer(q.id)} disabled={q.editedCorrectAnswers.length >= 5}><PlusCircle className="mr-2 h-4 w-4" /> Добавить вариант ответа</Button>
           </div>
         );
       case 'single-choice':

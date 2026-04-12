@@ -189,7 +189,7 @@ export default function Home() {
           const baseEditable = { id: uuidv4(), selected: true, editedQuestionText: q.questionText };
           switch (q.type) {
             case 'fill-in-the-blank':
-              return { ...baseEditable, type: q.type, originalQuestion: q, editedCorrectAnswer: q.correctAnswer } as EditableFillInTheBlankQuestion;
+              return { ...baseEditable, type: q.type, originalQuestion: q, editedCorrectAnswers: q.correctAnswers } as EditableFillInTheBlankQuestion;
             case 'single-choice':
               return { ...baseEditable, type: q.type, originalQuestion: q, editedOptions: q.options.map(opt => ({ id: uuidv4(), text: opt })), editedCorrectAnswer: q.correctAnswer } as EditableSingleChoiceQuestion;
             case 'multiple-choice':

@@ -23,7 +23,7 @@ export interface BaseQuestion {
 
 export interface FillInTheBlankQuestion extends BaseQuestion {
   type: 'fill-in-the-blank';
-  correctAnswer: string;
+  correctAnswers: string[];
 }
 
 export interface SingleChoiceQuestion extends BaseQuestion {
@@ -64,7 +64,7 @@ interface EditableBaseQuestion {
 export interface EditableFillInTheBlankQuestion extends EditableBaseQuestion {
   type: 'fill-in-the-blank';
   originalQuestion: FillInTheBlankQuestion; 
-  editedCorrectAnswer: string;
+  editedCorrectAnswers: string[];
 }
 
 export interface EditableOption {
