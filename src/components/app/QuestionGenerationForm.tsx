@@ -30,10 +30,10 @@ export default function QuestionGenerationForm({
 
   const handleSubmit = () => {
     const num = parseInt(numQuestions, 10);
-    if (isNaN(num) || num <= 0 || num > 20) {
+    if (isNaN(num) || num <= 0 || num > 100) {
       toast({
         title: "Неверное количество",
-        description: "Количество вопросов должно быть от 1 до 20.",
+        description: "Количество вопросов должно быть от 1 до 100.",
         variant: "destructive",
       });
       return;
@@ -57,14 +57,14 @@ export default function QuestionGenerationForm({
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="num-questions" className="text-base">Количество вопросов (1-20)</Label>
+          <Label htmlFor="num-questions" className="text-base">Количество вопросов (1-100)</Label>
           <Input
             id="num-questions"
             type="number"
             value={numQuestions}
             onChange={(e) => setNumQuestions(e.target.value)}
             min="1"
-            max="20"
+            max="100"
             className="text-base"
           />
         </div>
